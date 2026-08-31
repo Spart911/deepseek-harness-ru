@@ -48,9 +48,8 @@ function permissionGlyph(value: string): ReactNode | undefined {
 /**
  * Display transform: kebab-case machine names render as title-case labels
  * (`workspace-write` → `Workspace Write`); non-kebab host-configured names
- * pass through. Full access intentionally overrides the machine-name
- * transform so both permission surfaces use the product label `Full access`;
- * the warning body remains locale-aware.
+ * pass through. Shipped presets prefer locale keys so Read Only / Workspace
+ * Write / Full access follow the active language.
  */
 function displayName(name: string): string {
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) return name
@@ -61,7 +60,10 @@ function optionLabel(
   option: PermissionSelectValue['options'][number],
   t: ComposerBarProps['t'],
 ): string {
-  return option.value === FULL_ACCESS ? t('access.fullLabel') : displayName(option.name)
+  if (option.value === FULL_ACCESS) return t('access.fullLabel')
+  if (option.value === 'read-only') return t('access.preset.readOnly')
+  if (option.value === 'workspace-write') return t('access.preset.workspaceWrite')
+  return displayName(option.name)
 }
 
 export interface PermissionSelectProps {

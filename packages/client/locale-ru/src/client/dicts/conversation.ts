@@ -53,6 +53,8 @@ export const conversationRu: Record<string, string> = {
   'access.confirm.cancel': 'Отмена',
   'access.confirm.enable': 'Включить полный доступ',
   'access.fullLabel': 'Полный доступ',
+  'access.preset.readOnly': 'Только чтение',
+  'access.preset.workspaceWrite': 'Запись в рабочей области',
   'hero.headline': 'В неизвестность',
   'hero.preview': 'Превью',
   'hero.chooseWorkspace': 'Выбрать рабочую область',

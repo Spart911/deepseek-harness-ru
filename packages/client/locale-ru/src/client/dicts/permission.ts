@@ -4,6 +4,9 @@ export const settingsPermissionRu: Record<string, string> = {
   description: 'Режим прав по умолчанию для новых сеансов',
   loading: 'Загрузка',
   unavailable: 'Недоступно',
+  'preset.readOnly': 'Только чтение',
+  'preset.workspaceWrite': 'Запись в рабочей области',
+  'preset.fullAccess': 'Полный доступ',
   'confirm.title': 'Включить полный доступ?',
   'confirm.description': 'Полный доступ сокращает подтверждения и позволяет агенту сразу выполнять больше действий, включая чувствительные операции, правки файлов и внешние команды. Используйте только если доверяете следующим задачам.',
   'confirm.acknowledge': 'Я понимаю риски и хочу продолжить',
@@ -13,6 +16,9 @@ export const settingsPermissionRu: Record<string, string> = {
 
 /** Russian copy for the `permission.access` session popup. */
 export const permissionAccessRu: Record<string, string> = {
+  'preset.readOnly': 'Только чтение',
+  'preset.workspaceWrite': 'Запись в рабочей области',
+  'preset.fullAccess': 'Полный доступ',
   'confirm.title': 'Включить полный доступ?',
   'confirm.description': 'Полный доступ сокращает подтверждения и позволяет агенту сразу выполнять больше действий, включая чувствительные операции, правки файлов и внешние команды. Используйте только если доверяете текущей задаче.',
   'confirm.acknowledge': 'Я понимаю риски и хочу продолжить',
