@@ -1,0 +1,48 @@
+import type { CommonKey } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+
+/**
+ * Russian dictionary for the shared `common` namespace.
+ * Incomplete namespaces fall through to English via the language fallback chain.
+ */
+export const commonRu = {
+  'ok': 'ОК',
+  'cancel': 'Отмена',
+  'close': 'Закрыть',
+  'copy': 'Копировать',
+  'copied': 'Скопировано',
+  'copy.failed': 'Не удалось скопировать',
+  'copy.value': 'Копировать значение',
+  'copy.json': 'Копировать JSON',
+  'copy.path': 'Копировать путь свойства',
+  'copy.prettyJson': 'Копировать форматированный JSON',
+  'copy.compactJson': 'Копировать компактный JSON',
+  'copy.optionsHint': '{action}; правый клик — варианты копирования',
+  'retry': 'Повторить',
+  'loading': 'Загрузка…',
+  'load.failed': 'Не удалось загрузить',
+  'submit': 'Отправить',
+  'submitting': 'Отправка…',
+  'next': 'Далее',
+  'previous': 'Назад',
+  'skip': 'Пропустить',
+  'delete': 'Удалить',
+  'edit': 'Изменить',
+  'save': 'Сохранить',
+  'search': 'Поиск',
+  'more': 'Ещё',
+  'collapse': 'Свернуть',
+  'expand': 'Развернуть',
+  'back': 'Назад',
+  'brand.localBuild': 'DSH локальная сборка',
+  'unknown': 'Неизвестно',
+  'none': 'Нет',
+  'truncated': 'Обрезано',
+  'connection.reconnecting': 'Соединение потеряно; переподключение…',
+  'json.collapseNode': 'Свернуть узел JSON',
+  'json.expandNode': 'Развернуть узел JSON',
+  'json.label': 'JSON',
+  'markdown.footnotes': 'Сноски',
+  'markdown.truncatedCharacters': '… обрезано на {total} символах',
+  'number.thousand': '{value}K',
+  'number.million': '{value}M',
+} satisfies Record<CommonKey, string>
