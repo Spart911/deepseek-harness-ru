@@ -1,0 +1,21 @@
+/** Russian copy for the `settings.pluginInventory` namespace. */
+export const settingsPluginInventoryRu: Record<string, string> = {
+  tab: 'Список плагинов',
+  loading: 'Чтение плагинов…',
+  error: 'Плагины временно недоступны.',
+  retry: 'Повторить',
+  search: 'Поиск плагинов',
+  catalog: 'Список плагинов',
+  empty: 'Плагинов нет.',
+  emptySearch: 'Нет подходящих плагинов.',
+  enabledTag: 'Включён',
+  disabledTag: 'Отключён',
+  configuration: 'Конфигурация',
+  cordis: 'Состояние Cordis',
+  unobserved: 'Не смонтирован',
+  pending: 'Ждёт зависимости',
+  loadingPhase: 'Загрузка',
+  active: 'Смонтирован',
+  failed: 'Ошибка монтирования',
+  unloading: 'Выгрузка',
+}

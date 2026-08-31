@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package adds Russian to the web GUI language catalog. It registers `ru` through `ctx.locale.addLanguage` with English as the fallback, and contributes Russian dictionaries for the namespaces it owns today (`common` and `settings.locale`). Missing keys and other namespaces fall through to English. Mount it beside `dsh-client-locale` when the deployment should offer Russian in Settings → General; the shipped web profile includes it.
+This package adds Russian to the web GUI language catalog. It registers `ru` through `ctx.locale.addLanguage` with English as the fallback, and contributes Russian dictionaries for the shipped UI namespaces listed in `src/client/dicts/` (shell, settings, conversation, chat, trajectory, session export, and the other Client feature namespaces). Missing keys fall through to English. Mount it beside `dsh-client-locale` when the deployment should offer Russian in Settings → General; the shipped web profile includes it.
 
 ## Table of Contents
 
@@ -43,7 +43,7 @@ Add further `ctx.locale.register(ns, 'ru', dict)` effects in this package (or a 
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-[`src/client/index.ts`](src/client/index.ts) registers the language definition and the owned dictionaries as Cordis effects so disposal reverses them. The node half is an empty Loader seat. Lookup walks `ru` → `en` for each key, then repeats that chain in `common`, per the locale service contract.
+[`src/client/index.ts`](src/client/index.ts) registers the language definition and every dictionary in [`src/client/dicts/`](src/client/dicts/) as Cordis effects so disposal reverses them. The node half is an empty Loader seat. Lookup walks `ru` → `en` for each key, then repeats that chain in `common`, per the locale service contract.
 
 </details>
 
@@ -71,7 +71,6 @@ None; this package neither assembles nor sends a provider request.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Partial coverage** — only `common` and `settings.locale` ship Russian in this pack; other UI namespaces fall through to English until dictionaries are added.
 - **No product-default override** — this pack does not force `ru` when the browser and Host preference name another language; a Russian-first distribution sets preference or browser language separately.
 
 <a id="dev-note"></a>
