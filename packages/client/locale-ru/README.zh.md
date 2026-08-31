@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## Summary
 
-本包把俄语加入 Web GUI 语言目录。它通过 `ctx.locale.addLanguage` 注册 `ru`（回退到英语），并为当前拥有的命名空间（`common` 与 `settings.locale`）贡献俄语词典。缺失的键以及其他命名空间回退到英语。当部署需要在「设置 → 通用」中提供俄语时，把它挂在 `dsh-client-locale` 旁边；随附的 web profile 已包含本包。
+本包把俄语加入 Web GUI 语言目录。它通过 `ctx.locale.addLanguage` 注册 `ru`（回退到英语），并为 `src/client/dicts/` 中列出的随附 UI 命名空间（shell、设置、会话、聊天、轨迹、Session 导出，以及其他 Client 功能命名空间）贡献俄语词典。缺失的键回退到英语。当部署需要在「设置 → 通用」中提供俄语时，把它挂在 `dsh-client-locale` 旁边；随附的 web profile 已包含本包。
 
 ## Table of Contents
 
@@ -43,7 +43,7 @@ kind: "package-reference"
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-[`src/client/index.ts`](src/client/index.ts) 把语言定义与所拥有的词典注册为 Cordis effect，以便卸载时撤销。Node 半是空的 Loader 占位。按 locale 服务约定，每个键的查找走 `ru` → `en`，再在 `common` 中重复该链。
+[`src/client/index.ts`](src/client/index.ts) 把语言定义与 [`src/client/dicts/`](src/client/dicts/) 中的每本词典注册为 Cordis effect，以便卸载时撤销。Node 半是空的 Loader 占位。按 locale 服务约定，每个键的查找走 `ru` → `en`，再在 `common` 中重复该链。
 
 </details>
 
@@ -71,7 +71,6 @@ None; this package neither assembles nor sends a provider request.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Partial coverage** — 本包目前仅为 `common` 与 `settings.locale` 提供俄语；其他 UI 命名空间在补充词典前回退到英语。
 - **No product-default override** — 当浏览器与 Host 偏好指向其他语言时，本包不会强制使用 `ru`；俄语优先的发行版需另行设置偏好或浏览器语言。
 
 <a id="dev-note"></a>
