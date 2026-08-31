@@ -175,6 +175,9 @@
     - id: locale
       name: '@deepseek-ai/dsh-client-locale'
 
+    - id: locale-ru
+      name: '@deepseek-ai/dsh-client-locale-ru'
+
     - id: ui-layout
       name: '@deepseek-ai/dsh-client-ui-layout'
 
