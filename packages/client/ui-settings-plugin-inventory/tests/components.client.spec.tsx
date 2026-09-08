@@ -240,7 +240,7 @@ describe('PluginInventorySettingsTab', () => {
           fiberPhase: null,
         },
       ],
-    } as Snapshot
+    } as unknown as Snapshot
     render(<PluginInventorySettingsTab {...props(async () => snapshot)} />)
     expect(await screen.findByText('terminal-bash')).toBeTruthy()
     expect(screen.getByText('terminal-pwsh')).toBeTruthy()
