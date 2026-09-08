@@ -23,6 +23,7 @@ import { settingsRu } from './settings.ts'
 import { settingsAgentPresetRu } from './settings-agent-preset.ts'
 import { settingsModelsRu } from './settings-models.ts'
 import { settingsPluginInventoryRu } from './settings-plugin-inventory.ts'
+import { settingsPluginInventoryDescRu } from './settings-plugin-inventory-desc.ts'
 import { settingsPluginsRu } from './settings-plugins.ts'
 import { settingsThemeRu } from './settings-theme.ts'
 import { sidebarRu } from './sidebar.ts'
@@ -42,6 +43,7 @@ export const ruNamespaces: ReadonlyArray<readonly [string, Record<string, string
   ['settings.models', settingsModelsRu],
   ['settings.plugins', settingsPluginsRu],
   ['settings.pluginInventory', settingsPluginInventoryRu],
+  ['settings.pluginInventory.desc', settingsPluginInventoryDescRu],
   ['settings.agentPreset', settingsAgentPresetRu],
   ['settings.permission', settingsPermissionRu],
   ['permission.access', permissionAccessRu],

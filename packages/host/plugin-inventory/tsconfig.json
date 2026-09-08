@@ -12,13 +12,22 @@
       "path": "../../../vendor/cordis"
     },
     {
+      "path": "../../../vendor/include"
+    },
+    {
       "path": "../../../vendor/loader"
+    },
+    {
+      "path": "../../util/atomic-write"
     },
     {
       "path": "../../util/brand"
     },
     {
       "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../boot/app-boot"
     },
     {
       "path": "../../runtime-diagnostics/invariants"

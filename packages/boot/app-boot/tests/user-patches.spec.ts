@@ -18,6 +18,7 @@ import {
   boot,
   loadOptionalPatches,
   PROFILE_PATCH_FILENAME,
+  refreshLiveUserPatches,
   watchUserPatches,
 } from '../src/index.ts'
 
@@ -362,6 +363,8 @@ describe('boot with user patches', () => {
     })
     try {
       writeFileSync(filename, '- id: noop\n  config:\n    value: live\n')
+      await refreshLiveUserPatches(ctx)
+      expect((entryConfig(ctx, 'noop') as { value?: string }).value).toBe('live')
       await eventually(() => (entryConfig(ctx, 'noop') as { value?: string }).value === 'live', 'user patch addition was not applied')
 
       writeFileSync(filename, '- id: noop\n  config:\n    fail: true\n')

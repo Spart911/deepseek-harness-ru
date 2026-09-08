@@ -18,4 +18,11 @@ export const settingsPluginInventoryRu: Record<string, string> = {
   active: 'Смонтирован',
   failed: 'Ошибка монтирования',
   unloading: 'Выгрузка',
+  enable: 'Включить плагин',
+  disable: 'Отключить плагин',
+  toggleBusy: 'Обновление…',
+  toggleError: 'Не удалось изменить состояние плагина.',
+  immutableHint: 'Этот плагин нужен для работы интерфейса и его нельзя отключить здесь.',
+  description: 'Описание',
+  entryId: 'Запись',
 }
