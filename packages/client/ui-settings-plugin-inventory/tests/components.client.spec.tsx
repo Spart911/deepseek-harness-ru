@@ -219,7 +219,7 @@ describe('PluginInventorySettingsTab', () => {
   })
 
   it('labels twin terminal backends by patch id instead of duplicating the package short name', async () => {
-    const snapshot: Snapshot = {
+    const snapshot = {
       entries: [
         {
           entryId: 'include:agent-presets:terminal-bash',
@@ -240,7 +240,7 @@ describe('PluginInventorySettingsTab', () => {
           fiberPhase: null,
         },
       ],
-    }
+    } as Snapshot
     render(<PluginInventorySettingsTab {...props(async () => snapshot)} />)
     expect(await screen.findByText('terminal-bash')).toBeTruthy()
     expect(screen.getByText('terminal-pwsh')).toBeTruthy()
