@@ -172,6 +172,23 @@ export class WebServer extends Service {
   }
 
   /**
+   * Drop every exact route whose pathname starts with one prefix. Plugins that
+   * register routes without a fiber-scoped disposer can leave stale rows after
+   * a live include refresh; inventory toggles clear known prefixes before reload.
+   * @param pathPrefix - absolute pathname prefix, for example `/api/marketplace`.
+   * @returns how many exact routes were removed.
+   */
+  clearExactRoutes(pathPrefix: string): number {
+    let removed = 0
+    for (const path of [...this.exact.keys()]) {
+      if (!path.startsWith(pathPrefix)) continue
+      this.exact.delete(path)
+      removed++
+    }
+    return removed
+  }
+
+  /**
    * Register an exact-path HTTP upgrade route. Duplicate paths throw because
    * one socket can have only one protocol owner.
    * @param route - pathname and handler owning negotiation plus socket use.

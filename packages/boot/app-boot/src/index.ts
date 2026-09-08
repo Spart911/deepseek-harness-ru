@@ -202,6 +202,33 @@ export function loadLayeredEnv(
 
 const bootstrapIncludes = new WeakMap<Context, Entry>()
 
+/** In-process refresh registered by {@link watchUserPatches} for live profiles. */
+const livePatchRefreshHandlers = new WeakMap<Context, () => Promise<void>>()
+
+/**
+ * Root Include loader entry mounted by {@link mountRootInclude} / {@link boot}.
+ * @param ctx - settled app context.
+ * @returns the bootstrap Include entry, or `undefined` before mount.
+ */
+export function getRootIncludeEntry(ctx: Context): Entry | undefined {
+  return bootstrapIncludes.get(ctx)
+}
+
+/**
+ * Reapply the live user patch layers through the root Include without waiting
+ * for Cordis HMR debounce. {@link watchUserPatches} registers this callback
+ * for profiles with `patchReload: "live"`.
+ * @param ctx - settled app context with an active user-patch watcher.
+ * @throws when no live refresh handler was registered for this context.
+ */
+export async function refreshLiveUserPatches(ctx: Context): Promise<void> {
+  const refresh = livePatchRefreshHandlers.get(ctx)
+  if (refresh === undefined) {
+    throw new Error('live user patch refresh is unavailable for this context')
+  }
+  await refresh()
+}
+
 // The include's YAML dialect (`!!js` scalars become expression nodes the
 // Loader interpolates against each entry's injection-ready context), imported
 // from the include itself so patch parsing and config dumping can never drift
@@ -241,7 +268,7 @@ export async function watchUserPatches(
   if (hmr === undefined) throw new Error(`${binName}: user patch-layer watching requires the Cordis HMR service`)
   const entry = bootstrapIncludes.get(ctx)
   if (entry === undefined) throw new Error(`${binName}: user patch-layer watching requires the root Include entry`)
-  const register = hmr.registerConfig(filename, async () => {
+  const applyUserPatches = async (): Promise<void> => {
     // Re-read the include's non-patch options per refresh so a writer that
     // updates another option between refreshes is not silently reverted.
     const { patches: _previousPatches, ...includeConfig } = entry.options.config as Include.Config
@@ -253,7 +280,9 @@ export async function watchUserPatches(
         patches,
       },
     })
-  })
+  }
+  livePatchRefreshHandlers.set(ctx, applyUserPatches)
+  const register = hmr.registerConfig(filename, applyUserPatches)
   try {
     return await register
   } catch (error) {

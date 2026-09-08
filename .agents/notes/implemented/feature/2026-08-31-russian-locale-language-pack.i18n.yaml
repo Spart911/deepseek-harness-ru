@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-31-russian-locale-language-pack.md
-2026-08-31-russian-locale-language-pack.md: e75bc3e8c0bee890440d177a887ab0767ca18c63
-2026-08-31-russian-locale-language-pack.zh.md: ba53b6550e1255f36b4d1cd8084381413de7106a
+2026-08-31-russian-locale-language-pack.md: 90a20b02f53ef121c4f901fd6bf5f36821182037
+2026-08-31-russian-locale-language-pack.zh.md: 5510d1f5b853cec9793614d64bac29c38efb1dc6

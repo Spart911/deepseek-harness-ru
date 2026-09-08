@@ -26,6 +26,7 @@ import type { CommandDescriptor } from './directory.ts'
 import { CommandDirectory } from './directory.ts'
 import { PopupSelectController } from './popup.ts'
 import type { TokenSegment } from './popup.ts'
+import { catalogDescription } from './locales.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Events {
@@ -253,14 +254,21 @@ export class CommandUiRuntime extends Service implements CommandUiContract {
     const seen = new Set<string>()
     for (const c of list) {
       seen.add(c.name)
-      rows.push({ name: c.name, description: c.description, ...(c.input !== undefined ? { hint: c.input.hint } : {}) })
+      rows.push({
+        name: c.name,
+        description: catalogDescription(c.name, c.description, this.t),
+        ...(c.input !== undefined ? { hint: c.input.hint } : {}),
+      })
     }
     for (const contribution of this.live.contributions.values()) {
       if (!contribution.available(session)) continue
       if (seen.has(contribution.name)) {
         throw new Error(`ui-commands: contribution /${contribution.name} collides with a host command`)
       }
-      rows.push({ name: contribution.name, description: contribution.description })
+      rows.push({
+        name: contribution.name,
+        description: catalogDescription(contribution.name, contribution.description, this.t),
+      })
     }
     return fuzzyCandidates(
       rows.filter(c => req.position === 'leading' || c.hint === undefined),

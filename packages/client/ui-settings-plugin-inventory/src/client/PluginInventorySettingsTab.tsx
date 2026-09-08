@@ -8,14 +8,28 @@ import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-cli
 import type { PluginInventoryLocaleKey } from './locales.ts'
 import css from './PluginInventorySettingsTab.module.css'
 
+type PluginInventoryEntry = PluginInventorySnapshot['entries'][number]
+type PluginEntryId = PluginInventoryEntry['entryId']
+type PluginFiberPhase = PluginInventoryEntry['fiberPhase']
+
 /** Registration-side Remote face used by the section. */
 export interface PluginInventorySettingsTabInjected {
   /** Read a current Host inventory snapshot. */
   list: () => Promise<PluginInventorySnapshot>
+  /**
+   * Enable or disable one inventory entry and return the refreshed snapshot.
+   * @param entryId - Loader-tree entry id from the current snapshot.
+   * @param enabled - desired enablement.
+   */
+  setEnabled: (entryId: PluginEntryId, enabled: boolean) => Promise<PluginInventorySnapshot>
+  /**
+   * Localized description for a module, preferring language-pack copy over the
+   * Host package.json summary.
+   * @param moduleName - exact Loader module specifier.
+   * @param summary - Host-resolved package.json description, or null.
+   */
+  describe: (moduleName: string, summary: string | null) => string | undefined
 }
-
-type PluginInventoryEntry = PluginInventorySnapshot['entries'][number]
-type PluginFiberPhase = PluginInventoryEntry['fiberPhase']
 
 /** Full component props assembled by the Settings slot renderer. */
 export type PluginInventorySettingsTabProps =
@@ -45,7 +59,7 @@ function phaseLabel(
 }
 
 /** Compact a module specifier without guessing whether its Loader id was generated. */
-function moduleShortName(moduleName: string): string {
+export function moduleShortName(moduleName: string): string {
   const unscoped = moduleName.startsWith('@') ? moduleName.slice(moduleName.indexOf('/') + 1) : moduleName
   return unscoped
     .replace(/^cordis:/, '')
@@ -53,20 +67,87 @@ function moduleShortName(moduleName: string): string {
     .replace(/^dsh-(?:host-|client-)?/, '')
 }
 
+/** Cordis builtin module specifiers mapped to description dictionary keys. */
+const CORDIS_BUILTIN_DESC_KEYS: Record<string, string> = {
+  'cordis:include': 'cordis-plugin-include',
+  'cordis:group': 'cordis-plugin-group',
+}
+
+/**
+ * Stable description dictionary key: unscoped package name (or raw specifier).
+ * Keeps `cordis-plugin-hmr` distinct from `dsh-client-hmr`.
+ */
+export function moduleDescKey(moduleName: string): string {
+  const builtin = CORDIS_BUILTIN_DESC_KEYS[moduleName]
+  if (builtin !== undefined) return builtin
+  if (moduleName.startsWith('@')) return moduleName.slice(moduleName.indexOf('/') + 1)
+  return moduleName
+}
+
 /** Whether an inventory row matches the local catalog query. */
-function matches(entry: PluginInventoryEntry, normalizedQuery: string): boolean {
+function matches(
+  entry: PluginInventoryEntry,
+  catalogTitle: string,
+  description: string | undefined,
+  normalizedQuery: string,
+): boolean {
   if (normalizedQuery.length === 0) return true
-  return [entry.moduleName, entry.entryId]
+  return [entry.moduleName, entry.entryId, catalogTitle, description ?? '']
     .some(value => value.toLocaleLowerCase().includes(normalizedQuery))
 }
 
-/** Render the read-only current Loader inventory. */
-export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsTabProps): ReactNode {
+/**
+ * Card titles for the catalog: the short module name when unique, otherwise the
+ * patch id or Loader-tree tail so twin rows (bash/pwsh terminal backends) stay
+ * distinguishable.
+ */
+export function catalogTitles(entries: readonly PluginInventoryEntry[]): Map<PluginEntryId, string> {
+  const groups = new Map<string, PluginInventoryEntry[]>()
+  for (const entry of entries) {
+    const short = moduleShortName(entry.moduleName)
+    const group = groups.get(short) ?? []
+    group.push(entry)
+    groups.set(short, group)
+  }
+  const titles = new Map<PluginEntryId, string>()
+  for (const group of groups.values()) {
+    const sole = group[0]
+    if (group.length === 1 && sole !== undefined) {
+      titles.set(sole.entryId, moduleShortName(sole.moduleName))
+      continue
+    }
+    const patchIdOwners = new Map<string, number>()
+    for (const entry of group) {
+      const patchId = entry.patchId ?? ''
+      patchIdOwners.set(patchId, (patchIdOwners.get(patchId) ?? 0) + 1)
+    }
+    for (const entry of group) {
+      const patchId = entry.patchId
+      const uniquePatch = patchId !== null && (patchIdOwners.get(patchId) ?? 0) === 1
+      const fallbackTail = entry.entryId.includes(':')
+        ? entry.entryId.slice(entry.entryId.lastIndexOf(':') + 1)
+        : entry.entryId
+      titles.set(entry.entryId, uniquePatch ? patchId : fallbackTail)
+    }
+  }
+  return titles
+}
+
+/** Render the Host plugin inventory with descriptions and enablement toggles. */
+export function PluginInventorySettingsTab({
+  list,
+  setEnabled,
+  describe,
+  t,
+}: PluginInventorySettingsTabProps): ReactNode {
   const catalogId = useId()
   const [request, setRequest] = useState(0)
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState<PluginInventoryEntry['entryId'] | null>(null)
   const [state, setState] = useState<ViewState>({ status: 'loading' })
+  const [pendingId, setPendingId] = useState<PluginInventoryEntry['entryId'] | null>(null)
+  const [toggleErrorId, setToggleErrorId] = useState<PluginInventoryEntry['entryId'] | null>(null)
+  const [toggleErrorMessage, setToggleErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     let current = true
@@ -78,12 +159,18 @@ export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsT
   }, [list, request])
 
   const normalizedQuery = query.trim().toLocaleLowerCase()
-  const filteredEntries = useMemo(
-    () => state.status === 'ready'
-      ? state.snapshot.entries.filter(entry => matches(entry, normalizedQuery))
-      : [],
-    [normalizedQuery, state],
+  const titles = useMemo(
+    () => (state.status === 'ready' ? catalogTitles(state.snapshot.entries) : new Map()),
+    [state],
   )
+  const filteredEntries = useMemo(() => {
+    if (state.status !== 'ready') return []
+    return state.snapshot.entries.filter((entry) => {
+      const description = describe(entry.moduleName, entry.summary)
+      const catalogTitle = titles.get(entry.entryId) ?? moduleShortName(entry.moduleName)
+      return matches(entry, catalogTitle, description, normalizedQuery)
+    })
+  }, [describe, normalizedQuery, state, titles])
 
   useEffect(() => {
     if (expanded !== null && !filteredEntries.some(entry => entry.entryId === expanded)) {
@@ -94,6 +181,27 @@ export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsT
   const retry = (): void => {
     setState({ status: 'loading' })
     setRequest(value => value + 1)
+  }
+
+  const toggle = async (entry: PluginInventoryEntry): Promise<void> => {
+    if (!entry.mutable || pendingId !== null) return
+    setPendingId(entry.entryId)
+    setToggleErrorId(null)
+    setToggleErrorMessage(null)
+    try {
+      const fresh = await list()
+      const current = fresh.entries.find(candidate => candidate.entryId === entry.entryId)
+        ?? (entry.patchId === null ? undefined : fresh.entries.find(candidate =>
+          candidate.patchId === entry.patchId && candidate.moduleName === entry.moduleName))
+        ?? entry
+      const snapshot = await setEnabled(current.entryId, !current.enabled)
+      setState({ status: 'ready', snapshot })
+    } catch (error) {
+      setToggleErrorId(entry.entryId)
+      setToggleErrorMessage(error instanceof Error ? error.message : String(error))
+    } finally {
+      setPendingId(null)
+    }
   }
 
   return (
@@ -130,10 +238,12 @@ export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsT
             <ul className={css.cards}>
               {filteredEntries.map((entry) => {
                 const status = phaseLabel(entry.fiberPhase, t)
-                const title = moduleShortName(entry.moduleName)
+                const title = titles.get(entry.entryId) ?? moduleShortName(entry.moduleName)
+                const description = describe(entry.moduleName, entry.summary)
                 const configuration = t(entry.enabled ? 'enabledTag' : 'disabledTag')
                 const open = expanded === entry.entryId
                 const detailId = `${catalogId}-details-${encodeURIComponent(entry.entryId)}`
+                const busy = pendingId === entry.entryId
                 return (
                   <li
                     className={css.card}
@@ -141,37 +251,73 @@ export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsT
                     data-plugin-entry={entry.entryId}
                     data-open={open ? 'true' : undefined}
                   >
-                    <button
-                      className={css.cardContent}
-                      type="button"
-                      aria-expanded={open}
-                      aria-controls={detailId}
-                      aria-label={entry.enabled ? `${title}, ${status}, ${configuration}` : `${title}, ${configuration}`}
-                      onClick={() => {
-                        setExpanded(current => current === entry.entryId ? null : entry.entryId)
-                      }}
-                    >
-                      <strong className={css.cardTitle} title={entry.moduleName}>{title}</strong>
-                      <span className={css.cardTrailing}>
-                        {entry.enabled ? (
-                          <span
-                            className={css.statusDot}
-                            data-phase={entry.fiberPhase ?? 'unobserved'}
-                            role="img"
-                            aria-label={status}
-                            title={status}
-                          />
-                        ) : null}
-                        <span className={css.configTag} data-enabled={entry.enabled ? 'true' : 'false'}>
-                          {configuration}
+                    <div className={css.cardBody}>
+                      <button
+                        className={css.cardContent}
+                        type="button"
+                        aria-expanded={open}
+                        aria-controls={detailId}
+                        aria-label={entry.enabled ? `${title}, ${status}, ${configuration}` : `${title}, ${configuration}`}
+                        onClick={() => {
+                          setExpanded(current => current === entry.entryId ? null : entry.entryId)
+                        }}
+                      >
+                        <span className={css.cardHead}>
+                          <strong className={css.cardTitle} title={entry.moduleName}>{title}</strong>
                         </span>
-                        <IconChevronDownOutline14 className={css.chevron} size={12} aria-hidden="true" />
-                      </span>
-                    </button>
+                        <span className={css.cardTrailing}>
+                          {entry.enabled ? (
+                            <span
+                              className={css.statusDot}
+                              data-phase={entry.fiberPhase ?? 'unobserved'}
+                              role="img"
+                              aria-label={status}
+                              title={status}
+                            />
+                          ) : null}
+                          <span className={css.configTag} data-enabled={entry.enabled ? 'true' : 'false'}>
+                            {configuration}
+                          </span>
+                          <IconChevronDownOutline14 className={css.chevron} size={12} aria-hidden="true" />
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        role="switch"
+                        className={css.switch}
+                        data-on={entry.enabled ? 'true' : 'false'}
+                        aria-checked={entry.enabled}
+                        aria-busy={busy}
+                        aria-label={t(entry.enabled ? 'disable' : 'enable')}
+                        title={entry.mutable ? undefined : t('immutableHint')}
+                        disabled={!entry.mutable || busy}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void toggle(entry)
+                        }}
+                      >
+                        <span className={css.thumb} />
+                      </button>
+                    </div>
+                    {toggleErrorId === entry.entryId ? (
+                      <p className={css.toggleFailure} role="alert">
+                        {toggleErrorMessage ?? t('toggleError')}
+                      </p>
+                    ) : null}
                     {open ? (
                       <div className={css.cardDetails} id={detailId}>
-                        <code className={css.entryValue} data-loader-entry>{entry.entryId}</code>
+                        {entry.patchId ? (
+                          <code className={css.entryValue} data-loader-entry>{entry.patchId}</code>
+                        ) : (
+                          <code className={css.entryValue} data-loader-entry>{entry.entryId}</code>
+                        )}
                         <dl className={css.details}>
+                          {description ? (
+                            <div>
+                              <dt>{t('description')}</dt>
+                              <dd>{description}</dd>
+                            </div>
+                          ) : null}
                           <div>
                             <dt>{t('configuration')}</dt>
                             <dd>{configuration}</dd>
@@ -180,6 +326,12 @@ export function PluginInventorySettingsTab({ list, t }: PluginInventorySettingsT
                             <div>
                               <dt>{t('cordis')}</dt>
                               <dd>{status}</dd>
+                            </div>
+                          ) : null}
+                          {!entry.mutable ? (
+                            <div>
+                              <dt>{t('disable')}</dt>
+                              <dd>{t('immutableHint')}</dd>
                             </div>
                           ) : null}
                         </dl>

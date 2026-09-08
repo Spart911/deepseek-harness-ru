@@ -20,6 +20,13 @@ export const zh = {
   active: '已挂载',
   failed: '挂载失败',
   unloading: '卸载中',
+  enable: '启用插件',
+  disable: '停用插件',
+  toggleBusy: '正在更新…',
+  toggleError: '无法更改该插件的启用状态。',
+  immutableHint: '此插件对界面运行至关重要，无法在此停用。',
+  description: '描述',
+  entryId: '条目',
 } satisfies Record<string, string>
 
 /** Plugin inventory locale key union. */
@@ -45,4 +52,11 @@ export const en = {
   active: 'Mounted',
   failed: 'Mount failed',
   unloading: 'Unloading',
+  enable: 'Enable plugin',
+  disable: 'Disable plugin',
+  toggleBusy: 'Updating…',
+  toggleError: 'Could not change this plugin’s enablement.',
+  immutableHint: 'This plugin is required for the UI and cannot be disabled here.',
+  description: 'Description',
+  entryId: 'Entry',
 } satisfies Record<PluginInventoryLocaleKey, string>

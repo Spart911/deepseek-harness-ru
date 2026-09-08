@@ -248,6 +248,15 @@ describe('real Loader composition', () => {
     expect(await request(port, '/once')).toMatchObject({ status: 200, body: 'ONCE' })
     disposeOnce()
     expect((await request(port, '/once')).body).toContain('shell') // back to the fallback owner
+    expect(server.clearExactRoutes('/api/marketplace')).toBe(0)
+    server.register({ kind: 'exact', path: '/api/marketplace/list', handler: (_req, res) => { res.writeHead(200); res.end('LIST') } })
+    server.register({ kind: 'exact', path: '/api/marketplace/self-update', handler: (_req, res) => { res.writeHead(200); res.end('SELF') } })
+    server.register({ kind: 'exact', path: '/api/other', handler: (_req, res) => { res.writeHead(200); res.end('OTHER') } })
+    expect(await request(port, '/api/marketplace/list')).toMatchObject({ status: 200, body: 'LIST' })
+    expect(server.clearExactRoutes('/api/marketplace')).toBe(2)
+    expect(() => server.register({ kind: 'exact', path: '/api/marketplace/list', handler: () => {} })).not.toThrow()
+    expect(() => server.register({ kind: 'exact', path: '/api/marketplace/self-update', handler: () => {} })).not.toThrow()
+    expect(await request(port, '/api/other')).toMatchObject({ status: 200, body: 'OTHER' })
     expect(() => server.register({ kind: 'exact', path: '/once', handler: () => {} })).not.toThrow()
 
     // Releasing the seat restores the unclaimed 404 and registrability.

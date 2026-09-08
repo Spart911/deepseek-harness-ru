@@ -1,0 +1,21 @@
+/** Russian copy for the `model` namespace. */
+export const modelRu: Record<string, string> = {
+  'command.description': 'Выбрать модель для этого сеанса',
+  'option.loadError': 'Не удалось загрузить каталог: {message}',
+  'trigger.fallback': 'Выбрать модель',
+  'trigger.loading': 'Загрузка моделей…',
+  'trigger.selectAria': 'Выбрать модель',
+  'trigger.aria': 'Выбор модели, текущая {model}',
+  'trigger.ariaEffort': 'Выбор модели, текущая {model}, уровень рассуждения {effort}',
+  'menu.aria': 'Модель и уровень рассуждения',
+  'menu.model': 'Модель',
+  'menu.effort': 'Уровень',
+  'effort.providerDefault': 'По умолчанию',
+  'status.loading': 'Обновление списка моделей…',
+  'error.action': 'Ошибка операции с моделью: {message}',
+  'action.reload': 'Обновить',
+  'warning.groupLoad': '{name}: не удалось загрузить: {message}',
+  'empty.models': 'Нет доступных моделей.',
+  'blocked.composer': 'Эта модель недоступна — выберите другую, чтобы продолжить',
+  'empty.efforts': 'У этой модели нет уровней рассуждения.',
+}
